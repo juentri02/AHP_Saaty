@@ -62,7 +62,7 @@ def render_matrix_proof(matrix_result):
 
     # Cek Konsistensi
     if matrix_result.is_consistent:
-        st.success(f"✅ **Konsisten!** (CR = {matrix_result.consistency_ratio:.3f} $\le$ 0.1)")
+        st.success(f"✅ **Konsisten!** (CR = {matrix_result.consistency_ratio:.3f} $\\le$ 0.1)")
     else:
         st.error(f"❌ **Tidak Konsisten!** (CR = {matrix_result.consistency_ratio:.3f} > 0.1)")
         
