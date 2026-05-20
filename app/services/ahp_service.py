@@ -109,20 +109,36 @@ class AHPSynthesisService:
             if meta:
                 course.name = meta.name
 
-        return AHPFinalResult(student=transcript, matrices=matrices_results, rankings=rankings)
+        # Check if early stage (No prifile classes taken)
+        total_elective_classes = sum(raw_density.values())
+        is_early = total_elective_classes == 0
+
+        return AHPFinalResult(
+            student=transcript, 
+            matrices=matrices_results, 
+            rankings=rankings,
+            is_early_stage=is_early
+        )
 
     def _calculate_raw_scores(self, transcript: StudentTranscript, criteria_type: str) -> Dict[str, float]:
-        scores = {p: {"total_points": 0.0, "count": 0} for p in self.PROFILES}
+        """Menghitung IPK asli (Weighted by SKS) untuk mata kuliah pada kriteria tertentu."""
+        scores = {p: {"total_weighted_points": 0.0, "total_sks": 0} for p in self.PROFILES}
+        
         for course in transcript.courses:
             rules = knowledge_base.get_rules_for_course(course.code, criteria_type)
             for profile in rules.keys():
                 if profile in scores:
-                    scores[profile]["total_points"] += course.grade_value
-                    scores[profile]["count"] += 1
+                    # Rumus IPK: (Nilai x SKS)
+                    scores[profile]["total_weighted_points"] += (course.grade_value * course.sks)
+                    scores[profile]["total_sks"] += course.sks
                     
         averages = {}
         for p in self.PROFILES:
-            averages[p] = scores[p]["total_points"] / scores[p]["count"] if scores[p]["count"] > 0 else 0.01
+            if scores[p]["total_sks"] > 0:
+                # Hasil akhir IPK: Total Poin / Total SKS
+                averages[p] = scores[p]["total_weighted_points"] / scores[p]["total_sks"]
+            else:
+                averages[p] = 0.01 # Cegah zero-division
         return averages
 
     def _calculate_density(self, transcript: StudentTranscript) -> Dict[str, int]:

@@ -31,7 +31,7 @@ class ParsedCourse(BaseModel):
     """Represents a single row extracted from the student's PDF transcript."""
     code: str = Field(..., description="Course code, e.g., TI6043")
     name: str = Field(..., description="Full course name")
-    sks: int = Field(..., ge=1, le=6, description="SKS/Credit weight")
+    sks: int = Field(..., ge=1, le=12, description="SKS/Credit weight") # Sudah diganti sks max 12 dengan asumsi sks matkul tertinggi yang ada sekarang adalah 12
     grade_letter: str = Field(..., description="Raw letter grade from PDF")
     grade_value: float = Field(..., ge=0.0, le=4.0, description="Numeric academic weight (0.0 - 4.0)")
 
@@ -88,3 +88,4 @@ class AHPFinalResult(BaseModel):
     student: StudentTranscript
     matrices: List[AHPMatrixResult] # All matrices used in calculation
     rankings: List[ProfileRanking]  # The final sorted recommendation
+    is_early_stage: bool = False

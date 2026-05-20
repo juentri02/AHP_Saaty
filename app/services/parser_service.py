@@ -39,7 +39,18 @@ class TranscriptParser:
         full_text = self._extract_text_from_pdf(file_bytes)
         
         if not full_text.strip():
-            raise ValueError("Parser Error: The PDF is empty or consists only of unreadable images (scanned).")
+            raise ValueError("Parser Error: PDF kosong atau hanya berisi gambar (hasil scan). Harap gunakan PDF teks asli.")
+        
+        # Validasi Dokumen
+        text_upper = full_text.upper()
+
+        # 1. Validasi Kampus (UKDW)
+        if "UNIVERSITAS KRISTEN DUTA WACANA" not in text_upper and "UKDW" not in text_upper:
+            raise ValueError("Akses Ditolak: Transkrip tidak valid. Sistem ini secara eksklusif hanya menerima transkrip yang diterbitkan oleh Universitas Kristen Duta Wacana (UKDW).")
+            
+        # 2. Validasi Program Studi (Informatika)
+        if "INFORMATIKA" not in text_upper:
+            raise ValueError("Akses Ditolak: Program Studi tidak sesuai. Aturan pakar pada sistem ini hanya dirancang untuk mahasiswa Program Studi INFORMATIKA.")
 
         # Extract Metadata
         student_id = self._extract_metadata(full_text, self.NIM_PATTERN, "UNKNOWN_NIM")
