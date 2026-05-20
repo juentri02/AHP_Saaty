@@ -1,7 +1,6 @@
 # streamlit_app.py
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
 # Import backend services
 from app.services.parser_service import parser_service
@@ -9,7 +8,7 @@ from app.services.ahp_service import ahp_service
 
 st.set_page_config(page_title="SPK Profiling AHP", page_icon="🎓", layout="wide")
 
-# --- CUSTOM CSS FOR HERO SECTION ---
+# --- CUSTOM CSS FOR HERO SECTION (Dipertahankan karena bagus) ---
 st.markdown("""
     <style>
     .best-profile {
@@ -27,66 +26,89 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def render_matrix_proof(matrix_result):
-    """Fungsi helper untuk merender langkah-langkah AHP Saaty."""
-    st.markdown(f"#### 🧮 {matrix_result.matrix_name}")
+    """Fungsi helper untuk merender langkah-langkah AHP Saaty secara Edukatif & Transparan."""
+    st.markdown(f"### 🧮 {matrix_result.matrix_name}")
     
-    # --- MENAMPILKAN ASAL ANGKA (TRANSPARANSI) ---
+    # --- TAHAP 1: DATA MENTAH & KONVERSI (Menggunakan st.info bawaan Streamlit) ---
     if matrix_result.raw_scores:
-        with st.expander("🔍 Lihat Asal Angka (Data Mentah Mahasiswa)"):
-            st.write(f"**Rumus Konversi:** `{matrix_result.conversion_rule}`")
-            st.write("Nilai Mentah Mahasiswa untuk masing-masing profil:")
+        st.info("**TAHAP 1: Ekstraksi Data Mentah & Konversi Skala Saaty**  \nSistem membaca nilai asli mahasiswa dan mengonversinya menjadi Skala Kepentingan (1-9).")
+        
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            st.write("**Nilai Mentah Mahasiswa:**")
             df_raw = pd.DataFrame([matrix_result.raw_scores])
             st.dataframe(df_raw.style.format("{:.2f}"))
-            st.caption("💡 *Cara baca: Sistem menghitung selisih angka mentah antara dua profil, lalu memasukkannya ke rumus di atas untuk menghasilkan skala Saaty 1-9 pada matriks di bawah.*")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.write("**1. Matriks Perbandingan Berpasangan**")
-        df_pairwise = pd.DataFrame(
-            matrix_result.pairwise_matrix, 
-            index=matrix_result.criteria, 
-            columns=matrix_result.criteria
-        )
-        st.dataframe(df_pairwise.style.format("{:.2f}"))
+        with c2:
+            st.write("**Rumus Konversi:**")
+            st.code(matrix_result.conversion_rule, language="text")
+            st.caption("Contoh: Jika nilai AI lebih tinggi dari PSD, selisihnya dimasukkan ke rumus di atas untuk menghasilkan angka 1 hingga 9. Jika AI bernilai 3, maka PSD terhadap AI otomatis bernilai 1/3 (0.33) berdasarkan *Aksioma Timbal Balik*.")
 
-    with col2:
-        st.write("**2. Matriks Normalisasi & Eigenvector (Bobot Prioritas)**")
-        df_norm = pd.DataFrame(
-            matrix_result.normalized_matrix, 
-            index=matrix_result.criteria, 
-            columns=matrix_result.criteria
-        )
-        df_norm['EIGENVECTOR'] = [matrix_result.eigenvector[c] for c in matrix_result.criteria]
-        st.dataframe(df_norm.style.format("{:.3f}"))
+    st.write("---")
 
-    # Cek Konsistensi
-    if matrix_result.is_consistent:
-        st.success(f"✅ **Konsisten!** (CR = {matrix_result.consistency_ratio:.3f} $\\le$ 0.1)")
+    # --- TAHAP 2: MATRIKS BERPASANGAN (Menggunakan st.info bawaan Streamlit) ---
+    st.info("**TAHAP 2: Matriks Perbandingan Berpasangan**  \nAngka hasil konversi dimasukkan ke dalam matriks. Langkah selanjutnya adalah **menjumlahkan setiap kolom ke bawah** untuk keperluan normalisasi.")
+    
+    # Menyiapkan DataFrame Matriks Awal
+    df_pairwise = pd.DataFrame(
+        matrix_result.pairwise_matrix, 
+        index=matrix_result.criteria, 
+        columns=matrix_result.criteria
+    )
+    # Menambahkan baris "JUMLAH KOLOM"
+    df_pairwise.loc['JUMLAH KOLOM'] = df_pairwise.sum(axis=0)
+    st.dataframe(df_pairwise.style.format("{:.2f}"))
+
+    st.write("---")
+
+    # --- TAHAP 3: NORMALISASI & EIGENVECTOR (Menggunakan st.info bawaan Streamlit) ---
+    st.info("**TAHAP 3: Normalisasi & Perhitungan Bobot Prioritas (Eigenvector)**  \nSetiap angka pada matriks di atas dibagi dengan **Jumlah Kolomnya** masing-masing. Setelah itu, angka dijumlahkan menyamping dan dirata-rata untuk mendapatkan **Bobot Prioritas (Eigenvector)**.")
+
+    df_norm = pd.DataFrame(
+        matrix_result.normalized_matrix, 
+        index=matrix_result.criteria, 
+        columns=matrix_result.criteria
+    )
+    df_norm['BOBOT PRIORITAS (Eigenvector)'] = [matrix_result.eigenvector[c] for c in matrix_result.criteria]
+    st.dataframe(df_norm.style.format("{:.3f}"))
+
+    # Mencari nilai tertinggi (Pemenang) dari kamus Eigenvector
+    sorted_eigen = sorted(matrix_result.eigenvector.items(), key=lambda x: x[1], reverse=True)
+    top_name, top_score = sorted_eigen[0]
+    
+    # Membuat kalimat yang berbeda untuk Matriks Profil vs Matriks Kriteria Utama
+    if "Kriteria Utama" in matrix_result.matrix_name:
+        st.success(f"💡 **Interpretasi Hasil:** Berdasarkan perhitungan matematis di atas, kriteria **{top_name}** memegang pengaruh paling krusial dengan bobot **{top_score*100:.1f}%**. Kriteria ini akan memberikan dorongan paling besar dalam penentuan skor akhir mahasiswa.")
     else:
-        st.error(f"❌ **Tidak Konsisten!** (CR = {matrix_result.consistency_ratio:.3f} > 0.1)")
+        st.success(f"💡 **Interpretasi Hasil:** Pada matriks ini, profil **{top_name}** mendominasi dengan persentase bobot kemenangan sebesar **{top_score*100:.1f}%**. Angka ini membuktikan bahwa {top_name} paling unggul dibandingkan profil lainnya dalam penilaian kriteria ini.")
+
+    # --- TAHAP 4: KONSISTENSI ---
+    if matrix_result.is_consistent:
+        st.success(f"✅ **Matriks Rasional dan Konsisten!** (Consistency Ratio = {matrix_result.consistency_ratio:.3f} $\\le$ 0.1)")
+    else:
+        st.error(f"❌ **Matriks Tidak Konsisten!** (Consistency Ratio = {matrix_result.consistency_ratio:.3f} > 0.1)")
         
-    st.caption(f"*Lambda Max: {matrix_result.lambda_max:.3f} | Consistency Index (CI): {matrix_result.consistency_index:.3f}*")
-    st.divider()
+    st.caption(f"*Bukti Matematis:* Lambda Max = {matrix_result.lambda_max:.3f}, Consistency Index (CI) = {matrix_result.consistency_index:.3f}")
+    st.write("<br><br>", unsafe_allow_html=True)
+
 
 # ==========================================
 # MAIN APP
 # ==========================================
-st.title("🎓 Sistem Pendukung Keputusan (SPK) - Metode AHP")
+st.title("🎓 Sistem Pendukung Keputusan (SPK) - Metode AHP Transparan")
 st.markdown("Rekomendasi Profil Kelulusan Mahasiswa FTI UKDW berdasarkan Transkrip Nilai (Kurikulum 2021/2023).")
 
 # 1. FILE UPLOAD
 uploaded_file = st.file_uploader("Upload Transkrip Nilai (PDF)", type=["pdf"])
 
 if uploaded_file is not None:
-    with st.spinner("Memproses dokumen dan menjalankan algoritma AHP..."):
+    with st.spinner("Mengekstrak data, membangun matriks, dan menjalankan algoritma AHP..."):
         try:
             # --- JALANKAN PIPELINE ---
             file_bytes = uploaded_file.read()
             transcript = parser_service.parse_pdf(file_bytes)
             
             if not transcript.courses:
-                st.error("Gagal membaca mata kuliah. Pastikan PDF yang diupload adalah transkrip FTI UKDW yang valid.")
+                st.error("Gagal membaca data. Sistem mensyaratkan pengguna minimal berada di Semester 2 (telah memiliki rekam jejak nilai Semester 1 yang sah pada transkrip FTI UKDW).")
                 st.stop()
                 
             ahp_result = ahp_service.analyze_student(transcript)
@@ -98,97 +120,70 @@ if uploaded_file is not None:
             **NIM:** {transcript.student_id} &nbsp;|&nbsp; **Total SKS:** {transcript.total_sks} &nbsp;|&nbsp; **IPK Ekstraksi:** {transcript.gpa:.2f}
             """)
 
+            # --- SMART DETECTION UNTUK MAHASISWA TAHAP AWAL ---
+            if ahp_result.is_early_stage:
+                st.warning("""
+                🤖 **SMART DETECTION ACTIVATED: Mengatasi *Cold Start Problem***  
+                Sistem mendeteksi bahwa mahasiswa ini belum mengambil Mata Kuliah Pilihan Profesi (umumnya berada di Semester 4 ke bawah). 
+                Sistem secara otomatis mengaktifkan **Mode Predictive Foundation**. Matriks disesuaikan sehingga rekomendasi murni memproyeksikan bakat berdasarkan nilai Mata Kuliah Wajib Dasar.
+                """)
+
             # --- HERO SECTION (PROFIL TERBAIK) ---
             best_profile = ahp_result.rankings[0]
             st.markdown(f"""
                 <div class="best-profile">
-                    <p>Berdasarkan analisis AHP, profil profesi terbaik untuk mahasiswa ini adalah:</p>
+                    <p>Berdasarkan perhitungan matematis AHP, profil profesi terbaik yang direkomendasikan adalah:</p>
                     <h1>{best_profile.profile.value}</h1>
-                    <p>Skor Akhir: <b>{best_profile.score:.4f}</b></p>
+                    <p>Skor Akhir Keseluruhan: <b>{best_profile.score:.4f}</b></p>
                 </div>
             """, unsafe_allow_html=True)
 
-            # --- 1. KESIMPULAN NARATIF OTOMATIS ---
-            st.info(f"💡 **Analisis Sistem:** Mahasiswa ini sangat direkomendasikan untuk mengambil jalur **{best_profile.profile.value}**. "
-                    f"Hal ini didukung oleh dominasi bobot pada kriteria minat (jumlah kelas) dan performa nilai keahlian. "
-                    f"Profil alternatif kedua adalah **{ahp_result.rankings[1].profile.value}** dengan selisih skor {(best_profile.score - ahp_result.rankings[1].score):.4f}.")
+            # --- RANKING LAINNYA ---
+            with st.expander("Lihat Peringkat Profil Lainnya (Ranking 2 - 4)"):
+                for rank in ahp_result.rankings[1:]:
+                    st.write(f"**Peringkat {rank.rank}: {rank.profile.value}** (Skor: {rank.score:.4f})")
+                    st.progress(rank.score)
 
-            # --- 2. VISUALISASI GRAFIK BAR ---
-            st.subheader("📈 Perbandingan Skor Akhir Profil")
-            
-            # Siapkan data untuk grafik
-            chart_data = {
-                "Profil":[r.profile.value for r in ahp_result.rankings],
-                "Skor AHP":[round(r.score, 4) for r in ahp_result.rankings]
-            }
-            df_chart = pd.DataFrame(chart_data)
-            
-            # Buat Bar Chart menggunakan Plotly
-            fig = px.bar(
-                df_chart, 
-                x="Skor AHP", 
-                y="Profil", 
-                orientation='h',
-                text="Skor AHP",
-                color="Profil",
-                color_discrete_sequence=["#28a745", "#17a2b8", "#ffc107", "#dc3545"]
-            )
-            fig.update_layout(
-                xaxis_title="Total Skor AHP (Bobot Prioritas Akhir)",
-                yaxis_title="",
-                showlegend=False,
-                height=350,
-                yaxis={'categoryorder':'total ascending'} # Urutkan dari skor terkecil ke terbesar
-            )
-            fig.update_traces(textposition='outside')
-            
-            st.plotly_chart(fig, use_container_width=True)
             st.divider()
 
-            # --- BUKTI MATEMATIKA AHP SAATY (UNTUK PENGUJI) ---
-            st.subheader("📊 Bukti Perhitungan SPK (Metode Saaty AHP)")
-            st.write("Langkah-langkah perhitungan Matriks Perbandingan Berpasangan berdasarkan selisih rata-rata nilai dan kepadatan/jumlah kelas.")
+            # --- BUKTI MATEMATIKA AHP SAATY TRANZPARAN ---
+            st.subheader("📊 Transparansi Algoritma (Buka Kotak Hitam / White-Box AHP)")
+            st.write("Sistem Pendukung Keputusan ini dirancang agar transparan. Silakan klik tab di bawah ini untuk melihat dari mana sistem mendapatkan angka-angka perhitungannya secara matematis.")
             
-            # Menggunakan 4 Tab karena sekarang kita punya 4 Matriks
             tab1, tab2, tab3, tab4 = st.tabs([
-                "1. Kualitas Dasar", 
-                "2. Kualitas Keahlian", 
-                "3. Kepadatan / Minat", 
-                "4. Sintesis Kriteria Utama"
+                "1. Matriks Dasar", 
+                "2. Matriks Keahlian", 
+                "3. Matriks Minat", 
+                "4. Sintesis Kriteria"
             ])
             
             with tab1:
                 render_matrix_proof(ahp_result.matrices[0])
-            
             with tab2:
                 render_matrix_proof(ahp_result.matrices[1])
-
             with tab3:
                 render_matrix_proof(ahp_result.matrices[2])
-                
             with tab4:
                 render_matrix_proof(ahp_result.matrices[3])
                 
-                # Menampilkan Tabel Sintesis Akhir
-                st.write("#### 🎯 Sintesis Akhir (Perkalian Bobot Gabungan)")
+                # Menampilkan Tabel Sintesis Akhir dengan Transparansi Penuh (Menggunakan st.info)
+                st.info("**TAHAP FINAL: Sintesis Akhir (Perkalian Keseluruhan)**  \nSistem mengalikan Bobot Alternatif masing-masing profil dengan Bobot Kriteria Utamanya.  \n*Rumus: Skor Akhir = (Bobot Dasar Alternatif × Bobot Kriteria Dasar) + (Bobot Keahlian Alternatif × Bobot Kriteria Keahlian) + (Bobot Minat Alternatif × Bobot Kriteria Minat)*")
+
                 synth_data =[]
                 for r in ahp_result.rankings:
+                    # Ambil bobot kriteria dari matriks ke-4 (matrices[3])
+                    w_f = ahp_result.matrices[3].eigenvector["FOUNDATION"]
+                    w_c = ahp_result.matrices[3].eigenvector["COMPETENCY"]
+                    w_d = ahp_result.matrices[3].eigenvector["MINAT"]
+                    
                     synth_data.append({
                         "Profil Alternatif": r.profile.value,
-                        "Bobot Dasar (F)": round(r.foundation_score, 4),
-                        "Bobot Keahlian (C)": round(r.competency_score, 4),
-                        "Bobot Minat (D)": round(r.density_score, 4),
-                        "Skor Akhir (AHP)": round(r.score, 4)
+                        "1. (Dasar × W_f)": f"({r.foundation_score:.3f} × {w_f:.3f})",
+                        "2. (Keahlian × W_c)": f"({r.competency_score:.3f} × {w_c:.3f})",
+                        "3. (Minat × W_d)": f"({r.density_score:.3f} × {w_d:.3f})",
+                        "Skor Akhir": round(r.score, 4)
                     })
                 st.dataframe(pd.DataFrame(synth_data).set_index("Profil Alternatif"))
-
-            # --- RANKING LAINNYA YANG DISEMBUNYIKAN ---
-            st.write("") # Spacer
-            with st.expander("Lihat Peringkat Profil Lainnya (Ranking 2 - 4)"):
-                for rank in ahp_result.rankings[1:]: # Skip rank 1
-                    st.write(f"**Peringkat {rank.rank}: {rank.profile.value}** (Skor: {rank.score:.4f})")
-                    # Visualisasi progress bar sederhana
-                    st.progress(rank.score)
 
         except Exception as e:
             st.error(f"Terjadi kesalahan saat memproses data: {str(e)}")
