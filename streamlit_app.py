@@ -94,7 +94,7 @@ def render_matrix_proof(matrix_result):
 # ==========================================
 # MAIN APP
 # ==========================================
-st.title("🎓 Sistem Pendukung Keputusan (SPK) - Metode AHP Transparan")
+st.title("Sistem Pendukung Keputusan (SPK) - Metode AHP")
 st.markdown("Rekomendasi Profil Kelulusan Mahasiswa FTI UKDW berdasarkan Transkrip Nilai (Kurikulum 2021/2023).")
 
 # 1. FILE UPLOAD
@@ -123,7 +123,6 @@ if uploaded_file is not None:
             # --- SMART DETECTION UNTUK MAHASISWA TAHAP AWAL ---
             if ahp_result.is_early_stage:
                 st.warning("""
-                🤖 **SMART DETECTION ACTIVATED: Mengatasi *Cold Start Problem***  
                 Sistem mendeteksi bahwa mahasiswa ini belum mengambil Mata Kuliah Pilihan Profesi (umumnya berada di Semester 4 ke bawah). 
                 Sistem secara otomatis mengaktifkan **Mode Predictive Foundation**. Matriks disesuaikan sehingga rekomendasi murni memproyeksikan bakat berdasarkan nilai Mata Kuliah Wajib Dasar.
                 """)
@@ -147,7 +146,7 @@ if uploaded_file is not None:
             st.divider()
 
             # --- BUKTI MATEMATIKA AHP SAATY TRANZPARAN ---
-            st.subheader("📊 Transparansi Algoritma (Buka Kotak Hitam / White-Box AHP)")
+            st.subheader("📊 Transparansi Algoritma")
             st.write("Sistem Pendukung Keputusan ini dirancang agar transparan. Silakan klik tab di bawah ini untuk melihat dari mana sistem mendapatkan angka-angka perhitungannya secara matematis.")
             
             tab1, tab2, tab3, tab4 = st.tabs([
