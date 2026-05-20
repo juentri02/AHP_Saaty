@@ -1,77 +1,89 @@
 # data/relevance_rules.yaml
+# Berdasarkan Kurikulum FTI UKDW 2021 (Revisi 2023) + Mata Kuliah Transkrip Riil
 
 # ==========================================
 # 1. FOUNDATION (Mata Kuliah Wajib - Sem 1-4)
-# These represent the core IT fundamentals needed for the 4 profiles.
 # ==========================================
 FOUNDATION:
-  TI0073: { PSD: 1.0, AI: 1.0 } # Algoritma (Core for coding/AI)
+  TI0073: { PSD: 1.0, AI: 1.0 } # Algoritma
+  TI0082: { PSD: 1.0, AI: 1.0 } # Praktikum Algoritma
   TI0133: { PSD: 1.0, DMS: 1.0 } # Struktur Data
+  TI0141: { PSD: 1.0, DMS: 1.0 } # Praktikum Struktur Data
   TI0243: { PSD: 1.0 } # Pemrograman Web
+  TI0251: { PSD: 1.0 } # Praktikum Pemrograman Web
   TI0373: { PSD: 1.0 } # RPL Berorientasi Obyek
+  TI0382: { PSD: 1.0 } # Praktikum RPL-BO
   TI0203: { PSD: 1.0 } # IMK
 
   TI0033: { AI: 1.0 } # Mat Teknik
   TI0043: { AI: 1.0 } # Logika Mat
   TI0093: { AI: 1.0 } # Mat Diskrit
   TI0113: { AI: 1.0, DMS: 1.0 } # Statistik
+  TI0193: { AI: 1.0 } # Riset Operasi (Mendukung algoritma optimasi AI)
   TI0263: { AI: 1.0 } # Kecerdasan Buatan (Core AI)
 
-  TI0173: { DMS: 1.0 } # Sistem Basis Data (Core DMS)
+  TI0173: { DMS: 1.0 } # Sistem Basis Data
+  TI0181: { DMS: 1.0 } # Praktikum SBD
 
-  TI0052: { INFRA: 1.0 } # Jaringan Komputer (Core INFRA)
+  TI0012: { INFRA: 1.0 } # Teknologi Komputer
+  TI0021: { INFRA: 1.0 } # Praktikum Teknologi Komputer
+  TI0052: { INFRA: 1.0 } # Jaringan Komputer
+  TI0061: { INFRA: 1.0 } # Praktikum Jarkom
   TI0153: { INFRA: 1.0 } # Infrastruktur LAN
+  TI0161: { INFRA: 1.0 } # Praktikum Infra LAN
   TI0213: { INFRA: 1.0 } # Sistem Operasi
   TI0273: { INFRA: 1.0 } # Keamanan Komputer
   TI0103: { INFRA: 1.0 } # Arsitektur & Org Komputer
 
 # ==========================================
 # 2. COMPETENCY (Mata Kuliah Pilihan Wajib Profesi & Bebas)
-# Exactly matching PDF Page 2, 3, and 4
 # ==========================================
 COMPETENCY:
-  # --- Pilihan Wajib Profesi (PDF Page 2) ---
-  TI5033: { PSD: 1.0 }
-  TI5013: { PSD: 1.0 }
-  TI5023: { PSD: 1.0 }
-  TI4033: { PSD: 1.0 }
-  TI4023: { PSD: 1.0 }
+  # --- Pilihan Wajib Profesi (PSD) ---
+  TI5033: { PSD: 1.0 } # Desain dan Evaluasi Antarmuka
+  TI5013: { PSD: 1.0 } # Pola Desain Antarmuka Pengguna
+  TI5023: { PSD: 1.0 } # Desain Eksperimental
+  TI4033: { PSD: 1.0 } # Test Engineering
+  TI4023: { PSD: 1.0 } # Pemodelan Proses Bisnis
 
-  TI6043: { AI: 1.0 }
-  TI6053: { AI: 1.0 }
-  TI6063: { AI: 1.0 }
-  TI6073: { AI: 1.0 }
-  TI6083: { AI: 1.0 }
-  TI6093: { AI: 1.0 }
-  TI6103: { AI: 1.0 }
+  # --- Pilihan Wajib Profesi (AI) ---
+  TI6043: { AI: 1.0 } # Machine Learning
+  TI6053: { AI: 1.0 } # Jaringan Syaraf Tiruan
+  TI6063: { AI: 1.0 } # Knowledge-Based System
+  TI6073: { AI: 1.0 } # Pemrosesan Bahasa Natural
+  TI6083: { AI: 1.0 } # Pemrosesan Citra Digital
+  TI6093: { AI: 1.0 } # Pemrosesan Sinyal Digital
+  TI6103: { AI: 1.0 } # Game Engine
 
-  TI3013: { DMS: 1.0 }
-  TI3033: { DMS: 1.0 }
-  TI3043: { DMS: 1.0 }
-  TI3053: { DMS: 1.0 }
-  TI3063: { DMS: 1.0 }
+  # --- Pilihan Wajib Profesi (DMS) ---
+  TI3013: { DMS: 1.0 } # Administrasi Basis Data
+  TI3033: { DMS: 1.0 } # Data Warehouse
+  TI3043: { DMS: 1.0 } # Basis Data Terdistribusi
+  TI3053: { DMS: 1.0 } # Keamanan Basis Data
+  TI3063: { DMS: 1.0 } # Administrasi Basis Data Non-Relasional
 
-  TI8023: { INFRA: 1.0 }
-  TI8033: { INFRA: 1.0 }
-  TI8043: { INFRA: 1.0 }
-  TI8053: { INFRA: 1.0 }
-  TI8063: { INFRA: 1.0 }
-  TI8073: { INFRA: 1.0 }
-  TI8083: { INFRA: 1.0 }
+  # --- Pilihan Wajib Profesi (INFRA) ---
+  TI8023: { INFRA: 1.0 } # Enterprise Network
+  TI8033: { INFRA: 1.0 } # Cloud Infrastructure
+  TI8043: { INFRA: 1.0 } # Pengantar Keamanan Jaringan
+  TI8053: { INFRA: 1.0 } # Jaringan Nir Kabel
+  TI8063: { INFRA: 1.0 } # Otomasi Jaringan
+  TI8073: { INFRA: 1.0 } # Teknologi WAN
+  TI8083: { INFRA: 1.0 } # Keamanan Jaringan
 
-  # Shared Wajib Profesi
-  TI6033: { AI: 1.0, INFRA: 1.0 } # IoT
-  TI6113: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Prog Android
-  TI6123: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Prog iOS
-  TI6133: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Prog Hybrid
-  TI6143: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Prog Desktop
-  TI6153: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Prog Web Lanjut
+  # --- Shared Wajib Profesi (Lintas Profil) ---
+  TI6033: { AI: 1.0, INFRA: 1.0 } # Internet of Things
+  TI6113: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Pemrograman Perangkat Bergerak Android
+  TI6123: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Pemrograman Perangkat Bergerak iOS
+  TI6133: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Pemrograman Perangkat Bergerak Hybrid
+  TI6143: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Pemrograman Desktop
+  TI6153: { PSD: 1.0, AI: 1.0, DMS: 1.0 } # Pemrograman Web Lanjut
 
-  # --- Pilihan Bebas Prodi (PDF Page 3 & 4) ---
+  # --- Pilihan Bebas Prodi ---
   TI9013: { AI: 1.0 } # Algoritma Graf
   TI9023: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Analisis Data Statistik
   TI9383: { PSD: 1.0, DMS: 1.0 } # Analisis Proses Bisnis
-  TI9463: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # B. Inggris Informatika
+  TI9463: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Bahasa Inggris Informatika
   TI9053: { AI: 1.0 } # Competitive Programming
 
   TI9393: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Deep Learning
@@ -95,13 +107,21 @@ COMPETENCY:
   TI9283: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Technopreneurship
   TI9293: { PSD: 1.0, AI: 1.0 } # Teknik Animasi
   TI9443: { AI: 1.0 } # Forensic Text
-  TI9453: { PSD: 1.0 } # UX Writing
+  TI9453: { PSD: 1.0 } # UX Writing & Storytelling
   TI9333: { PSD: 1.0, DMS: 1.0 } # Visualisasi Data
 
   TI9163: { PSD: 1.0 } # Kriptografi
   TI9372: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Manajemen Kepemimpinan
   TI9475: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Pengembangan Pribadi
-  TI9473: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # PKM
-  TI9486: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Proyek Info Merdeka
-  TI9489: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # PSM 1
-  TI9490: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # PSM 2
+  TI9473: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Program Kreativitas Mahasiswa (PKM)
+  TI9486: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Proyek Informatika Merdeka
+  TI9489: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Program Studi Mandiri 1
+  TI9490: { PSD: 1.0, AI: 1.0, DMS: 1.0, INFRA: 1.0 } # Program Studi Mandiri 2
+
+  # --- Mata Kuliah Transkrip Riil Tambahan (Diluar Brosur Utama) ---
+  TI9563: { AI: 1.0 } # AI for Trading
+  TI9573: { PSD: 1.0, INFRA: 1.0 } # Pemrograman Blockchain Dasar
+  TI9583: { INFRA: 1.0 } # Container Orchestration
+  TI6013: { AI: 1.0 } # Supervised Learning
+  TI6023: { AI: 1.0 } # Unsupervised Learning
+  TI9343: { PSD: 1.0 } # Pemrograman Web Lanjut (Elective)
