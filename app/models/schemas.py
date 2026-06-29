@@ -89,3 +89,4 @@ class AHPFinalResult(BaseModel):
     matrices: List[AHPMatrixResult] # All matrices used in calculation
     rankings: List[ProfileRanking]  # The final sorted recommendation
     is_early_stage: bool = False
+    selected_criteria: List[str] = Field(default_factory=list, description="Kriteria yang dipilih user untuk simulasi perhitungan")
