@@ -97,10 +97,39 @@ def render_matrix_proof(matrix_result):
 st.title("Sistem Pendukung Keputusan (SPK) - Metode AHP")
 st.markdown("Rekomendasi Profil Kelulusan Mahasiswa FTI UKDW berdasarkan Transkrip Nilai (Kurikulum 2021/2023).")
 
-# 1. FILE UPLOAD
+# 1. PILIHAN KRITERIA FLEKSIBEL
+st.subheader("⚙️ Mode Simulasi Kriteria")
+criteria_options = {
+    "FOUNDATION": "Foundation / Nilai Dasar",
+    "COMPETENCY": "Competency / Nilai Keahlian",
+    "MINAT": "Minat / Jumlah Mata Kuliah Profesi"
+}
+selected_criteria = st.multiselect(
+    "Pilih kriteria yang ingin digunakan dalam perhitungan rekomendasi:",
+    options=list(criteria_options.keys()),
+    default=list(criteria_options.keys()),
+    format_func=lambda x: criteria_options[x],
+    help="User dapat mencoba 1, 2, atau 3 kriteria. Kriteria yang tidak dipilih tidak akan masuk ke skor akhir."
+)
+
+if len(selected_criteria) == 0:
+    st.warning("Pilih minimal 1 kriteria agar sistem dapat menghitung rekomendasi.")
+elif len(selected_criteria) == 1:
+    st.info(f"Mode aktif: **1 kriteria**. Skor akhir hanya dihitung dari **{criteria_options[selected_criteria[0]]}**.")
+elif len(selected_criteria) == 2:
+    selected_text = " dan ".join([criteria_options[c] for c in selected_criteria])
+    st.info(f"Mode aktif: **2 kriteria**. Skor akhir hanya dihitung dari **{selected_text}**.")
+else:
+    st.info("Mode aktif: **3 kriteria lengkap**. Sistem memakai Foundation, Competency, dan Minat seperti perhitungan utama.")
+
+# 2. FILE UPLOAD
 uploaded_file = st.file_uploader("Upload Transkrip Nilai (PDF)", type=["pdf"])
 
 if uploaded_file is not None:
+    if len(selected_criteria) == 0:
+        st.error("Perhitungan tidak dapat dilanjutkan karena belum ada kriteria yang dipilih.")
+        st.stop()
+
     with st.spinner("Mengekstrak data, membangun matriks, dan menjalankan algoritma AHP..."):
         try:
             # --- JALANKAN PIPELINE ---
@@ -111,29 +140,33 @@ if uploaded_file is not None:
                 st.error("Gagal membaca data. Sistem mensyaratkan pengguna minimal berada di Semester 2 (telah memiliki rekam jejak nilai Semester 1 yang sah pada transkrip FTI UKDW).")
                 st.stop()
                 
-            ahp_result = ahp_service.analyze_student(transcript)
+            ahp_result = ahp_service.analyze_student(transcript, selected_criteria=selected_criteria)
+            selected_criteria = ahp_result.selected_criteria
+            criteria_weight_matrix = ahp_result.matrices[-1]
+            criteria_weights = criteria_weight_matrix.eigenvector
             
             # --- TAMPILKAN DATA MAHASISWA ---
             st.subheader("👤 Data Mahasiswa")
             st.info(f"""
             **Nama:** {transcript.student_name}  
-            **NIM:** {transcript.student_id} &nbsp;|&nbsp; **Total SKS:** {transcript.total_sks} &nbsp;|&nbsp; **IPK Ekstraksi:** {transcript.gpa:.2f}
+            **NIM:** {transcript.student_id} &nbsp;|&nbsp; **Total SKS:** {transcript.total_sks} &nbsp;|&nbsp; **IPK Ekstraksi:** {transcript.gpa:.2f}  
+            **Kriteria Dipakai:** {", ".join([criteria_options[c] for c in selected_criteria])}
             """)
 
             # --- SMART DETECTION UNTUK MAHASISWA TAHAP AWAL ---
-            if ahp_result.is_early_stage:
+            if ahp_result.is_early_stage and len(selected_criteria) > 1:
                 st.warning("""
                 Sistem mendeteksi bahwa mahasiswa ini belum mengambil Mata Kuliah Pilihan Profesi (umumnya berada di Semester 4 ke bawah). 
-                Sistem secara otomatis mengaktifkan **Mode Predictive Foundation**. Matriks disesuaikan sehingga rekomendasi murni memproyeksikan bakat berdasarkan nilai Mata Kuliah Wajib Dasar.
+                Jika lebih dari satu kriteria dipilih, sistem tetap memakai aturan **Adaptive AHP Tahap Awal**. Namun, user tetap dapat mencoba satu kriteria saja melalui fitur simulasi fleksibel.
                 """)
 
             # --- HERO SECTION (PROFIL TERBAIK) ---
             best_profile = ahp_result.rankings[0]
             st.markdown(f"""
                 <div class="best-profile">
-                    <p>Berdasarkan perhitungan matematis AHP, profil profesi terbaik yang direkomendasikan adalah:</p>
+                    <p>Berdasarkan simulasi kriteria yang dipilih, profil profesi terbaik yang direkomendasikan adalah:</p>
                     <h1>{best_profile.profile.value}</h1>
-                    <p>Skor Akhir Keseluruhan: <b>{best_profile.score:.4f}</b></p>
+                    <p>Skor Akhir: <b>{best_profile.score:.4f}</b></p>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -145,44 +178,47 @@ if uploaded_file is not None:
 
             st.divider()
 
-            # --- BUKTI MATEMATIKA AHP SAATY TRANZPARAN ---
+            # --- BUKTI MATEMATIKA AHP SAATY TRANSPARAN ---
             st.subheader("📊 Transparansi Algoritma")
-            st.write("Sistem Pendukung Keputusan ini dirancang agar transparan. Silakan klik tab di bawah ini untuk melihat dari mana sistem mendapatkan angka-angka perhitungannya secara matematis.")
+            st.write("Sistem hanya menampilkan matriks dari kriteria yang dipilih user. Kriteria yang tidak dipilih tidak ikut dihitung dalam skor akhir.")
             
-            tab1, tab2, tab3, tab4 = st.tabs([
-                "1. Matriks Dasar", 
-                "2. Matriks Keahlian", 
-                "3. Matriks Minat", 
-                "4. Sintesis Kriteria"
-            ])
-            
-            with tab1:
-                render_matrix_proof(ahp_result.matrices[0])
-            with tab2:
-                render_matrix_proof(ahp_result.matrices[1])
-            with tab3:
-                render_matrix_proof(ahp_result.matrices[2])
-            with tab4:
-                render_matrix_proof(ahp_result.matrices[3])
-                
-                # Menampilkan Tabel Sintesis Akhir dengan Transparansi Penuh (Menggunakan st.info)
-                st.info("**TAHAP FINAL: Sintesis Akhir (Perkalian Keseluruhan)**  \nSistem mengalikan Bobot Alternatif masing-masing profil dengan Bobot Kriteria Utamanya.  \n*Rumus: Skor Akhir = (Bobot Dasar Alternatif × Bobot Kriteria Dasar) + (Bobot Keahlian Alternatif × Bobot Kriteria Keahlian) + (Bobot Minat Alternatif × Bobot Kriteria Minat)*")
+            tab_names = []
+            for idx, matrix_result in enumerate(ahp_result.matrices):
+                if idx == len(ahp_result.matrices) - 1:
+                    tab_names.append("Sintesis Kriteria")
+                else:
+                    tab_names.append(matrix_result.matrix_name.replace("Kriteria ", ""))
 
-                synth_data =[]
-                for r in ahp_result.rankings:
-                    # Ambil bobot kriteria dari matriks ke-4 (matrices[3])
-                    w_f = ahp_result.matrices[3].eigenvector["FOUNDATION"]
-                    w_c = ahp_result.matrices[3].eigenvector["COMPETENCY"]
-                    w_d = ahp_result.matrices[3].eigenvector["MINAT"]
-                    
-                    synth_data.append({
-                        "Profil Alternatif": r.profile.value,
-                        "1. (Dasar × W_f)": f"({r.foundation_score:.3f} × {w_f:.3f})",
-                        "2. (Keahlian × W_c)": f"({r.competency_score:.3f} × {w_c:.3f})",
-                        "3. (Minat × W_d)": f"({r.density_score:.3f} × {w_d:.3f})",
-                        "Skor Akhir": round(r.score, 4)
-                    })
-                st.dataframe(pd.DataFrame(synth_data).set_index("Profil Alternatif"))
+            tabs = st.tabs(tab_names)
+            for idx, tab in enumerate(tabs):
+                with tab:
+                    matrix_result = ahp_result.matrices[idx]
+                    render_matrix_proof(matrix_result)
+
+                    # Tabel sintesis hanya muncul di tab terakhir
+                    if idx == len(ahp_result.matrices) - 1:
+                        st.info("**TAHAP FINAL: Sintesis Akhir Fleksibel**  \nSistem mengalikan bobot alternatif hanya pada kriteria yang dipilih user. Kriteria yang tidak dipilih dianggap tidak berkontribusi terhadap skor akhir.")
+
+                        score_attr = {
+                            "FOUNDATION": "foundation_score",
+                            "COMPETENCY": "competency_score",
+                            "MINAT": "density_score"
+                        }
+
+                        synth_data = []
+                        for r in ahp_result.rankings:
+                            row = {"Profil Alternatif": r.profile.value}
+                            for criteria_name in selected_criteria:
+                                label = criteria_options[criteria_name]
+                                alternative_score = getattr(r, score_attr[criteria_name])
+                                criteria_weight = criteria_weights[criteria_name]
+                                row[f"{label} × Bobot"] = f"({alternative_score:.3f} × {criteria_weight:.3f})"
+                            row["Skor Akhir"] = round(r.score, 4)
+                            synth_data.append(row)
+
+                        st.dataframe(pd.DataFrame(synth_data).set_index("Profil Alternatif"))
+
+                        st.caption("Contoh: jika user hanya memilih Foundation, maka bobot Foundation = 1.000 dan skor akhir sama dengan bobot alternatif pada matriks Foundation.")
 
         except Exception as e:
             st.error(f"Terjadi kesalahan saat memproses data: {str(e)}")
